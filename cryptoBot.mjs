@@ -7,7 +7,7 @@ export async function createInvoice(amount) {
     }
 
     const API_URL = 'https://pay.crypt.bot/api/createInvoice'; 
-    const token = '286579:AAtvjMupO18C0uwzBbk4u8YV4f1G9x19LBr';
+    const token = <твой токен CryptoPay>;
 
     const response = await fetch(API_URL, {
         method: 'POST',

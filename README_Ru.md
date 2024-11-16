@@ -1,5 +1,3 @@
-![изображение](https://github.com/user-attachments/assets/72a7b627-fc94-4615-9129-853ef2423151)
-
 Бот для заключения безопасных сделок.
 Постоянный репозиторий: https://github.com/ScrimCode2/gbot
 

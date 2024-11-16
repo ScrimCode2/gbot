@@ -547,7 +547,7 @@ bot.onText(/@(\w+)|\/findById (\d+)/, async (msg, match) => {
 bot.on('callback_query', async (callbackQuery) => {
     const data = callbackQuery.data;
     const chatId = callbackQuery.message.chat.id.toString(); 
-    const messageId = callbackQuery.message.message_id; // Получаем ID сообщения с выбором роли
+    const messageId = callbackQuery.message.message_id;
 
     const hasOpenDeals = async (userId) => {
         const openDealStatuses = ['opened', 'spore', 'in progress'];
@@ -596,7 +596,7 @@ bot.on('callback_query', async (callbackQuery) => {
     }
 
     if (data.startsWith('choose_buyer_') || data.startsWith('choose_seller_')) {
-        // Удаляем сообщение с выбором роли
+     
         bot.deleteMessage(chatId, messageId).catch(error => console.error("Ошибка при удалении сообщения:", error));
 
         const role = data.startsWith('choose_buyer_') ? 'buyerId' : 'sellerId';

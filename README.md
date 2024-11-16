@@ -1,6 +1,8 @@
 Бот для заключения безопасных сделок.
 Постоянный репозиторий: https://github.com/ScrimCode2/gbot
 
+EN - https://github.com/ScrimCode2/gbot/blob/main/README_En.md
+
 Настройка бота:
 в файле .env - тг токен и подключение к БД.
 В качестве БД была выбрана PostgreSQL

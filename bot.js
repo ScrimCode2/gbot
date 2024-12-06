@@ -24,15 +24,11 @@ let createInvoice, checkInvoiceStatus, transfer;
 
 
 const userStates = {};
-const dealsPerPage = 5; // Количество сделок на странице
+const dealsPerPage = 5; 
 const userLinks = {};
-const activeProcesses = {}; // Добавляем объект для контроля активных процессов
+const activeProcesses = {}; 
 
-// function sendMessage(chatId, text, options = {}) {
-//     return bot.sendMessage(chatId, text, options).catch((error) => {
-//         console.error(`Ошибка при отправке сообщения: ${error.message}`);
-//     });
-// }
+
 
 async function sendMessage(chatId, text, options = {}) {
     try {
@@ -79,7 +75,6 @@ async function hasOpenDeals(userId) {
     return openDeals.length > 0;
 }
 
-// Пагинация сделок
 async function showDealsPage(chatId, page = 0) {
     if (activeProcesses[chatId]) {
         console.log(`Запрос сделки для пользователя ${chatId} уже выполняется`);
@@ -100,17 +95,14 @@ async function showDealsPage(chatId, page = 0) {
             return;
         }
 
-        // Рассчитываем сделки для текущей страницы
         const start = page * dealsPerPage;
         const end = start + dealsPerPage;
         const pageDeals = deals.slice(start, end);
 
-        // Формируем сообщение со сделками
         const dealMessages = pageDeals
             .map(deal => `#️⃣${deal.id}: Сумма: ${deal.amount}, Статус: ${deal.status}\nдля детального просмотра нажмите /deal_${deal.id}\n------------------------------------------------`)
             .join('\n');
 
-        // Создаем кнопки навигации
         const inlineKeyboard = [];
         if (page > 0) {
             inlineKeyboard.push({ text: '⬅️ Назад', callback_data: `deals_page_${page - 1}` });
@@ -125,7 +117,6 @@ async function showDealsPage(chatId, page = 0) {
             }
         };
 
-        // Проверяем наличие сообщения, чтобы не отправлять дубликаты
         if (userStates[chatId] && userStates[chatId].messageId) {
             const currentState = userStates[chatId];
             const isTextSame = currentState.dealMessages === dealMessages;
@@ -154,13 +145,11 @@ async function showDealsPage(chatId, page = 0) {
     }
 }
 
-// Обработчик команды "💸Сделки"
 bot.onText(/💸Сделки/, async (msg) => {
     const chatId = msg.chat.id;
     showDealsPage(chatId, 0);
 });
 
-// Обработчик нажатий на inline-кнопки
 bot.on('callback_query', (query) => {
     const chatId = query.message.chat.id;
     const data = query.data;
@@ -170,7 +159,7 @@ bot.on('callback_query', (query) => {
         showDealsPage(chatId, page);
     }
 
-    bot.answerCallbackQuery(query.id); // Закрываем "часы" на кнопке
+    bot.answerCallbackQuery(query.id);
 });
 
 
@@ -210,7 +199,7 @@ bot.onText(/\/start/, async (msg) => {
 
 bot.onText(/\/open_webapp/, (msg) => {
     const chatId = msg.chat.id;
-    const webAppUrl = 'http://localhost:3001/webapp'; // URL вашего WebApp
+    const webAppUrl = 'http://localhost:3001/webapp';
 
     const options = {
         reply_markup: {
@@ -234,7 +223,6 @@ bot.on('message', async (msg) => {
     const text = msg.text?.trim();
     const username = msg.from?.username ? normalizeUsername(msg.from.username) : 'анонимный пользователь';
 
-    // Проверяем, существует ли chatId и text
     if (!chatId || !text) return;
 
     const userExists = await checkUser(chatId);
@@ -315,7 +303,6 @@ bot.on('message', async (msg) => {
 bot.onText(/\/showmenu/, (msg) => {
     const chatId = msg.chat.id;
     
-    // Отправляем клавиатуру с командами внизу
     const menuOptions = {
         reply_markup: {
             keyboard: [
@@ -323,8 +310,8 @@ bot.onText(/\/showmenu/, (msg) => {
                 ['💎Отзывы', '🧾Условия пользования ботом'],
                 ['🪬Профиль']
             ],
-            resize_keyboard: true,  // Подгоняет клавиатуру под размер экрана
-            one_time_keyboard: false // Оставляет клавиатуру видимой
+            resize_keyboard: true, 
+            one_time_keyboard: false
         }
     };
 
@@ -415,8 +402,6 @@ bot.on('message', async (msg) => {
     if (userStates[chatId]) {
         const amount = parseFloat(text);
         if (isNaN(amount) || amount <= 0) {
-            // sendMessage(chatId, 'Пожалуйста, введите корректную сумму.');
-            // return;
         }
 
         if (userStates[chatId].action === 'replenish_balance') {
@@ -572,62 +557,74 @@ bot.onText(/@(\w+)|\/findById (\d+)/, async (msg, match) => {
     }
 });
 
-
-// Обработчик для просмотра отзывов пользователя
-// bot.on('callback_query', async query => {
-//     const chatId = query.message.chat.id;
-//     const data = query.data;
-
-//     if (data.startsWith('reviews_')) {
-//         const userId = data.split('_')[1];
-        
-//         const reviews = await Review.findAll({ 
-//             where: { userId },
-//             include: [{ model: User, as: 'user', attributes: ['username'] }]
-//         });
-
-//         if (reviews.length > 0) {
-//             const reviewMessages = reviews.map(review => 
-//                 `⭐️ Рейтинг: ${review.rating}\nОтзыв: ${review.content}\nАвтор: @${review.user.username}`
-//             ).join('\n\n');
-//             bot.sendMessage(chatId, `Отзывы о пользователе:\n\n${reviewMessages}`);
-//         } else {
-//             bot.sendMessage(chatId, "Отзывов о пользователе нет.");
-//         }
-//     }
-// });
-
-
 bot.on('callback_query', async (callbackQuery) => {
     const data = callbackQuery.data;
     const chatId = callbackQuery.message.chat.id.toString(); 
-    const messageId = callbackQuery.message.message_id; // Получаем ID сообщения с выбором роли
+    const messageId = callbackQuery.message.message_id; 
 
     const hasOpenDeals = async (userId) => {
-        const openDealStatuses = ['opened', 'spore', 'in progress'];
+        const openDealStatuses = ['in progress', 'spore'];
+    
         const openDeals = await Deal.findOne({
             where: {
                 [Sequelize.Op.or]: [
-                    { buyerId: userId.toString() }, 
-                    { sellerId: userId.toString() }  
-                ],
-                status: {
-                    [Sequelize.Op.in]: openDealStatuses
-                }
+                    {
+                        [Sequelize.Op.and]: [
+                            { buyerId: userId },
+                            { status: { [Sequelize.Op.in]: openDealStatuses } }
+                        ]
+                    },
+                    {
+                        [Sequelize.Op.and]: [
+                            { sellerId: userId },
+                            { status: { [Sequelize.Op.in]: openDealStatuses } }
+                        ]
+                    }
+                ]
             }
         });
+    
+        console.log(`hasOpenDeals для пользователя ${userId}: ${openDeals ? 'да' : 'нет'}`);
+    
         return openDeals !== null;
-    };
+    }
+
+    const hasOpenDeals2 = async (userId) => {
+        const openDealStatuses = ['opened'];
+    
+        const openDeals = await Deal.findOne({
+            where: {
+                [Sequelize.Op.or]: [
+                    {
+                        [Sequelize.Op.and]: [
+                            { buyerId: userId },
+                            { status: { [Sequelize.Op.in]: openDealStatuses } }
+                        ]
+                    },
+                    {
+                        [Sequelize.Op.and]: [
+                            { sellerId: userId },
+                            { status: { [Sequelize.Op.in]: openDealStatuses } }
+                        ]
+                    }
+                ]
+            }
+        });
+
+        console.log(`hasOpenDeals для пользователя ${userId}: ${openDeals ? 'да' : 'нет'}`);
+    
+        return openDeals !== null;
+    }
 
     if (data.startsWith('propose_deal_')) {
         const targetChatId = data.split('_')[2].toString(); 
 
-        if (await hasOpenDeals(chatId)) {
+        if (await hasOpenDeals2(chatId)) {
             bot.sendMessage(chatId, "У вас уже есть открытая сделка. Завершите ее перед созданием новой.");
             return;
         }
 
-        if (await hasOpenDeals(targetChatId)) {
+        if (await hasOpenDeals2(targetChatId)) {
             bot.sendMessage(chatId, "У пользователя уже есть открытая сделка. Попробуйте позже.");
             return;
         }
@@ -650,7 +647,6 @@ bot.on('callback_query', async (callbackQuery) => {
     }
 
     if (data.startsWith('choose_buyer_') || data.startsWith('choose_seller_')) {
-        // Удаляем сообщение с выбором роли
         bot.deleteMessage(chatId, messageId).catch(error => console.error("Ошибка при удалении сообщения:", error));
 
         const role = data.startsWith('choose_buyer_') ? 'buyerId' : 'sellerId';
@@ -760,31 +756,6 @@ bot.on('callback_query', async (callbackQuery) => {
     }
 });
 
-// bot.onText(/\/my_deals/, async (msg) => {
-//     const chatId = msg.chat.id;
-
-//     const deals = await Deal.findAll({
-//         where: {
-//             [Op.or]: [
-//                 { buyerId: chatId.toString() },
-//                 { sellerId: chatId.toString() }
-//             ]
-//         }
-//     });
-
-//     if (deals.length === 0) {
-//         bot.sendMessage(chatId, "У вас нет активных сделок.");
-//         return;
-//     }
-
-//     let message = "Ваши сделки:\n";
-//     deals.forEach((deal, index) => {
-//         message += `Сделка #${deal.id}: Сумма: ${deal.amount}, Статус: ${deal.status}\n`;
-//     });
-
-//     message += "\nДля просмотра деталей сделки введите: /deal_<номер сделки> (например, /deal_1)";
-//     bot.sendMessage(chatId, message);
-// });
 
 
 bot.onText(/\/deal_(\d+)/, async (msg, match) => {
@@ -870,6 +841,7 @@ bot.on('message', async (msg) => {
     }
 });
 
+const admins = ["id админа"];
 
 bot.on('callback_query', async (callbackQuery) => {
     const data = callbackQuery.data;
@@ -896,6 +868,18 @@ bot.on('callback_query', async (callbackQuery) => {
         bot.sendMessage(deal.buyerId, `Ожидайте арбитра для решения спора по сделке #${dealId}. Спор инициирован пользователем @${username}.`);
         bot.sendMessage(deal.sellerId, `Ожидайте арбитра для решения спора по сделке #${dealId}. Спор инициирован пользователем @${username}.`);
 
+        const disputeMessage = `
+Спор по сделке #${dealId}.
+Инициатор спора: @${username}
+ID сделки: ${dealId}
+Покупатель: ${deal.buyerId}
+Продавец: ${deal.sellerId}
+Описание: ${deal.description || "не указано"}
+        `;
+
+        for (const adminId of admins) {
+            bot.sendMessage(adminId, disputeMessage);
+        }
     } else if (data.startsWith('cancel_deal_')) {
         const dealId = data.split('_')[2];
 
@@ -1005,29 +989,6 @@ bot.on('callback_query', async (callbackQuery) => {
 });
 
 
-
-// bot.onText(/\/my_dashboard/, async (msg) => {
-//     const chatId = msg.chat.id;
-//     const user = await User.findOne({ where: { chatId: chatId.toString() } });
-
-//     if (!user) {
-//         bot.sendMessage(chatId, "Вы не зарегистрированы.");
-//         return;
-//     }
-
-//     const deals = await Deal.findAll({ where: { [Sequelize.Op.or]: [{ buyerId: user.id }, { sellerId: user.id }] }});
-//     const reviews = await Review.findAll({ where: { userId: user.id } });
-
-//     let message = `Баланс: ${user.balance}\n`;
-//     message += `Количество сделок: ${deals.length}\n`;
-//     message += `Отзывы:\n${reviews.map(review => `- ${review.content}`).join('\n')}\n`;
-//     message += `Сделки:\n`;
-//     deals.forEach(deal => {
-//         message += `- С ${deal.buyerId === user.id ? 'покупателя' : 'продавца'} ${deal.buyerId === user.id ? deal.sellerId : deal.buyerId}, сумма: ${deal.amount}, статус: ${deal.status}\n`;
-//     });
-
-//     bot.sendMessage(chatId, message);
-// });
 
 bot.onText(/\/make_deal @(\w+) (\d+(?:\.\d{1,2})?) (.+)/, async (msg, match) => {
     const [_, targetUsername, amount, dealDescription] = match;
